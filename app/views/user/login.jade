@@ -8,37 +8,5 @@ block content
 					.card
 						.page-header
 							h1 #{translate("log_in")}
-						form(async-form="login", name="loginForm", action='/login', method="POST", ng-cloak)
-							input(name='_csrf', type='hidden', value=csrfToken)
-							input(name='redir', type='hidden', value=redir)
-							form-messages(for="loginForm")
-							.form-group
-								input.form-control(
-									type='email',
-									name='email',
-									required,
-									placeholder='email@example.com',
-									ng-model="email",
-									ng-model-options="{ updateOn: 'blur' }",
-									focus="true"
-								)
-								span.small.text-primary(ng-show="loginForm.email.$invalid && loginForm.email.$dirty")
-									| #{translate("must_be_email_address")}
-							.form-group
-								input.form-control(
-									type='password',
-									name='password',
-									required,
-									placeholder='********',
-									ng-model="password"
-								)
-								span.small.text-primary(ng-show="loginForm.password.$invalid && loginForm.password.$dirty")
-									| #{translate("required")}
-							.actions
-								button.btn-primary.btn(
-									type='submit',
-									ng-disabled="loginForm.inflight"
-								)
-									span(ng-show="!loginForm.inflight") #{translate("login")}
-									span(ng-show="loginForm.inflight") #{translate("logging_in")}...
-								a.pull-right(href='/user/password/reset') #{translate("forgot_your_password")}?
+							a.pull-right.btn.btn-default(href="/oauth_login")
+								| OAuth login

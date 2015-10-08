@@ -19,6 +19,7 @@ UserSchema = new Schema
 	lastLoggedIn      : {type : Date}
 	loginCount        : {type : Number, default: 0}
 	holdingAccount    : {type : Boolean, default: false}
+	oauth_id					: {type : String, default : ''}
 	ace               : {
 							mode        :   {type : String, default: 'none'}
 							theme       :   {type : String, default: 'textmate'}

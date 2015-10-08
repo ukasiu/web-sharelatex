@@ -2,15 +2,62 @@ AuthenticationManager = require ("./AuthenticationManager")
 LoginRateLimiter = require("../Security/LoginRateLimiter")
 UserGetter = require "../User/UserGetter"
 UserUpdater = require "../User/UserUpdater"
+UserCreator = require("../User/UserCreator")
 Metrics = require('../../infrastructure/Metrics')
 logger = require("logger-sharelatex")
 querystring = require('querystring')
 Url = require("url")
 Settings = require "settings-sharelatex"
 basicAuth = require('basic-auth-connect')
-
+OAuth = require('oauth');
+oauth2 = new OAuth.OAuth2('1aa61d56be9d1d09d948ffccfe09856d361ccd1b571917f0e274282200170136',
+	'b4f6db0d838e3b6053a68fdfe0ee7a3d20313f8e183562a88a9983fca6c01398', 
+	'https://accounts.iiet.pl/', 
+	'oauth/authorize',
+	'oauth/token', 
+	null);
 
 module.exports = AuthenticationController =
+	oauth_login: (req, res, next = (error) ->) ->
+		url = oauth2.getAuthorizeUrl
+		  redirect_uri: 'http://localhost:3000/oauth_callback'
+		  scope: 'public extended'
+		  response_type: 'code'
+		  state: 'test' # TODO save in session data
+		res.redirect url
+
+	oauth_callback: (req, res, next = (error) ->) ->
+		oauth2.getOAuthAccessToken req.query.code, 
+			grant_type: 'authorization_code'
+			redirect_uri: 'http://localhost:3000/oauth_callback',
+			(e, access_token, refresh_token, results) ->
+			  oauth2.getProtectedResource 'https://accounts.iiet.pl/oauth/v1/extended', access_token, (a,user_data,c,sth) ->
+			  	user_data = JSON.parse(user_data)
+			  	redir = Url.parse(req.body?.redir or "/project").path
+			  	AuthenticationManager.authenticateOAuth oauth_id: user_data.user_id, user_data.oauth_id, (error, user) ->
+			  		return next(error) if error?
+			  		if user?
+			  			AuthenticationController._recordSuccessfulLogin user._id
+			  			AuthenticationController.establishUserSession req, user, (error) ->
+			  				return next(error) if error?
+			  				req.session.justLoggedIn = true
+			  				logger.log user_id: user._id.toString(), "successful log in"
+			  				res.redirect redir
+			  		else
+			  			UserCreator.createNewUser 
+			  				holdingAccount: false
+			  				email: user_data.login + "@iiet.pl"
+			  				oauth_id: user_data.user_id,
+			  				(err, user) ->
+			  					return next(error) if error?
+			  					if user?
+			  						AuthenticationController._recordSuccessfulLogin user._id
+			  						AuthenticationController.establishUserSession req, user, (error) ->
+			  							return next(error) if error?
+			  							req.session.justLoggedIn = true
+			  							logger.log user_id: user._id.toString(), "successful log in"
+			  							res.redirect redir
+
 	login: (req, res, next = (error) ->) ->
 		email = req.body?.email?.toLowerCase()
 		password = req.body?.password

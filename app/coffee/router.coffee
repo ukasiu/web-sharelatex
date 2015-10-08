@@ -49,6 +49,12 @@ module.exports = class Router
 		webRouter.get  '/login', UserPagesController.loginPage
 		AuthenticationController.addEndpointToLoginWhitelist '/login'
 
+		webRouter.get  '/oauth_login', AuthenticationController.oauth_login
+		AuthenticationController.addEndpointToLoginWhitelist '/oauth_login'
+
+		webRouter.get  '/oauth_callback', AuthenticationController.oauth_callback
+		AuthenticationController.addEndpointToLoginWhitelist '/oauth_callback'
+
 		webRouter.post '/login', AuthenticationController.login
 		webRouter.get  '/logout', UserController.logout
 		webRouter.get  '/restricted', SecurityManager.restricted

@@ -15,6 +15,7 @@ module.exports =
 		user = new User()
 		user.email = opts.email
 		user.holdingAccount = opts.holdingAccount
+		user.oauth_id = opts.oauth_id
 
 		username = opts.email.match(/^[^@]*/)
 		if username?
